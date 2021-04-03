@@ -17,11 +17,13 @@ from botocore.config import Config
 import requests
 import matplotlib
 import matplotlib.pyplot as plt
-#from IPython.display import Audio, display
+import numpy as np
 
 [width, height] = matplotlib.rcParams['figure.figsize']
 if width < 10:
   matplotlib.rcParams['figure.figsize'] = [width * 2.5, height]
+
+np.seterr(divide = 'ignore') 
 
 def plot_waveform(waveform, sample_rate, title="Waveform", xlim=None, ylim=None):
   waveform = waveform.numpy()

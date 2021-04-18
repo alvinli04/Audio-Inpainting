@@ -27,13 +27,13 @@ def main():
     mspec = mspec[None, None, :, :128]
 
 
-    print(mspec.shape)
-    print(mspec)
+    #print(mspec.shape)
+    #print(mspec)
     x = torch.from_numpy(mspec)
 
-    print(x.size())
+    #print(x.size())
 
-    m = model.Encoder()
+    m = model.Model()
 
     # print(m)
     #
@@ -41,7 +41,7 @@ def main():
     # print(len(params))
     # print(params[0].size())
     m.eval()
-    m(x)
+    print(m(x))
 
 if __name__ == "__main__":
     main()

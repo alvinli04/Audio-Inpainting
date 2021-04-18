@@ -160,7 +160,7 @@ class Decoder(nn.Module):
             nn.ReLU()
         )
         
-        self.bn4 = nn.BatchNorm2d(1024)
+        self.bn4 = nn.BatchNorm2d(1)
 
 
     def forward(self, x):
@@ -172,8 +172,6 @@ class Decoder(nn.Module):
         out = self.bn3(out)
         out = self.layer4(out)
         out = self.bn4(out)
-        out = self.fc1(out)
-        out = self.fc2(out)
         return out
 
 def main():

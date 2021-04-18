@@ -34,4 +34,7 @@ def plot_mel_spectrogram(mel_sgram, sample_rate):
 
 if __name__ == '__main__':
     waveform, sample_rate = librosa.load('../data/sample.wav', sr=None)
-    plot_mel_spectrogram(get_mel_spectrogram(waveform, sample_rate), sample_rate)
+    mspec = get_mel_spectrogram(waveform, sample_rate)
+    plot_mel_spectrogram(mspec, sample_rate)
+    print(mspec)
+    

@@ -26,7 +26,7 @@ class Model(nn.Module):
     S: stride
     '''
 
-#TODO: general kernal size, stride size 
+#TODO: general kernal size, stride size
 class Encoder(nn.Module):
     '''
     input: 128 x 128 x 1 vector
@@ -78,11 +78,11 @@ class Encoder(nn.Module):
         self.bn4 = nn.BatchNorm2d(1024)
 
         self.fc1 = nn.Sequential(
-            nn.Linear(1024, 1024), 
+            nn.Linear(1, 1024),
             nn.ReLU()
         )
         self.fc2 = nn.Sequential(
-            nn.Linear(1024, 1024), 
+            nn.Linear(1024, 1024),
             nn.ReLU()
         )
 

@@ -24,15 +24,23 @@ import model
 def main():
     waveform, sample_rate = librosa.load('../data/sample.wav', sr=None)
     mspec = sp.get_mel_spectrogram(waveform, sample_rate)
+    mspec = mspec[None, None, :, :128]
+
+
+    print(mspec.shape)
+    print(mspec)
     x = torch.from_numpy(mspec)
 
+    print(x.size())
+
     m = model.Encoder()
-    print(m)
 
-    params = list(m.parameters())
-    print(len(params))
-    print(params[0].size())
-
+    # print(m)
+    #
+    # params = list(m.parameters())
+    # print(len(params))
+    # print(params[0].size())
+    m.eval()
     m(x)
 
 if __name__ == "__main__":

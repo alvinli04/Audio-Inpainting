@@ -37,4 +37,3 @@ if __name__ == '__main__':
     mspec = get_mel_spectrogram(waveform, sample_rate)
     plot_mel_spectrogram(mspec, sample_rate)
     print(mspec)
-    

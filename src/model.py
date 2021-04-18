@@ -103,40 +103,43 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
 
-    def __init__(self):
+    def __init__(self, K=3, S=2):
+        
         super(Decoder, self).__init__()
+        self.K, self.S = K, S
 
         self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(1024, 512, kernel_size=K, stride=S, padding=1),
             nn.ReLU(),
-            nn.Conv2d(16, 32, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(512, 256, kernel_size=K, stride=S, padding=1),
             nn.ReLU()
         )
 
-        self.bn1 = nn.BatchNorm2d(32)
+        self.bn1 = nn.BatchNorm2d(256)
 
         self.layer2 = nn.Sequential(
-            nn.Conv2d(32, 64, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(256, 128, kernel_size=K, stride=S, padding=1),
             nn.ReLU(),
-            nn.Conv2d(64, 128, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(128, 64, kernel_size=K, stride=S, padding=1),
             nn.ReLU()
         )
 
-        self.bn2 = nn.BatchNorm2d(128)
+        self.bn2 = nn.BatchNorm2d(64)
 
         self.layer3 = nn.Sequential(
-            nn.Conv2d(128, 256, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(64, 32, kernel_size=K, stride=S, padding=1),
             nn.ReLU(),
-            nn.Conv2d(256, 512, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(32, 16, kernel_size=K, stride=S, padding=1),
             nn.ReLU()
         )
 
-        self.bn3 = nn.BatchNorm2d(512)
+        self.bn3 = nn.BatchNorm2d(16)
 
         self.layer4 = nn.Sequential(
-            nn.Conv2d(512, 1024, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(16, 1, kernel_size=K, stride=S, padding=1),
             nn.ReLU()
         )
+        
         self.bn4 = nn.BatchNorm2d(1024)
 
 

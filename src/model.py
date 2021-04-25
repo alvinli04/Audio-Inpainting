@@ -124,7 +124,8 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
 
     def __init__(self, K=3, S=2):
-        
+        ident_stride = 1 #frame=3, padding=1, stride=1 gets you the same size
+
         super(Decoder, self).__init__()
         self.K, self.S = K, S
 
@@ -149,14 +150,14 @@ class Decoder(nn.Module):
         self.layer3 = nn.Sequential(
             nn.ConvTranspose2d(64, 32, kernel_size=K, stride=S, padding=1),
             nn.ReLU(),
-            nn.ConvTranspose2d(32, 16, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(32, 16, kernel_size=K, stride=(ident_stride,S), padding=1),
             nn.ReLU()
         )
 
         self.bn3 = nn.BatchNorm2d(16)
 
         self.layer4 = nn.Sequential(
-            nn.ConvTranspose2d(16, 1, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(16, 1, kernel_size=K, stride=(ident_stride,S), padding=1),
             nn.ReLU()
         )
         

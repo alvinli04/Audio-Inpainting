@@ -40,10 +40,15 @@ class Model(nn.Module):
 
     def forward(self, x):
         out = self.encoder.forward(x)
+
+        print ("encoder shape:", out.shape)
+
         out = self.decoder.forward(out)
 
+        print ("decoder shape:", out.shape)
+
         #remove normalization if needed
-        out = self.normalize(x)
+        out = self.normalize(out)
 
         return out
 
@@ -102,7 +107,7 @@ class Encoder(nn.Module):
             nn.ReLU()
         )
         self.fc2 = nn.Sequential(
-            nn.Linear(1024, 1024),
+            nn.Linear(1024, 1),
             nn.ReLU()
         )
 
@@ -118,46 +123,45 @@ class Encoder(nn.Module):
         out = self.bn4(out)
         out = self.fc1(out)
         out = self.fc2(out)
+        #print ("out shape:",out.shape)
         return out
 
 
 class Decoder(nn.Module):
 
     def __init__(self, K=3, S=2):
-        ident_stride = 1 #frame=3, padding=1, stride=1 gets you the same size
-
         super(Decoder, self).__init__()
         self.K, self.S = K, S
 
         self.layer1 = nn.Sequential(
-            nn.ConvTranspose2d(1024, 512, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(1024, 512, kernel_size=K, stride=S, padding=1, output_padding=(0,1)),
             nn.ReLU(),
-            nn.ConvTranspose2d(512, 256, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(512, 256, kernel_size=K, stride=S, padding=1, output_padding=(0,1)),
             nn.ReLU()
         )
 
         self.bn1 = nn.BatchNorm2d(256)
 
         self.layer2 = nn.Sequential(
-            nn.ConvTranspose2d(256, 128, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(256, 128, kernel_size=K, stride=S, padding=1, output_padding=1),
             nn.ReLU(),
-            nn.ConvTranspose2d(128, 64, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(128, 64, kernel_size=K, stride=S, padding=1, output_padding=1),
             nn.ReLU()
         )
 
         self.bn2 = nn.BatchNorm2d(64)
 
         self.layer3 = nn.Sequential(
-            nn.ConvTranspose2d(64, 32, kernel_size=K, stride=S, padding=1),
+            nn.ConvTranspose2d(64, 32, kernel_size=K, stride=S, padding=1, output_padding=1),
             nn.ReLU(),
-            nn.ConvTranspose2d(32, 16, kernel_size=K, stride=(ident_stride,S), padding=1),
+            nn.ConvTranspose2d(32, 16, kernel_size=K, stride=S, padding=1, output_padding=1),
             nn.ReLU()
         )
 
         self.bn3 = nn.BatchNorm2d(16)
 
         self.layer4 = nn.Sequential(
-            nn.ConvTranspose2d(16, 1, kernel_size=K, stride=(ident_stride,S), padding=1),
+            nn.ConvTranspose2d(16, 1, kernel_size=K, stride=S, padding=1, output_padding=1),
             nn.ReLU()
         )
         
@@ -166,6 +170,7 @@ class Decoder(nn.Module):
 
     def forward(self, x):
         out = self.layer1(x)
+        print ("layer1 shape:", out.shape)
         out = self.bn1(out)
         out = self.layer2(out)
         out = self.bn2(out)

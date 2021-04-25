@@ -41,7 +41,9 @@ def main():
     # print(len(params))
     # print(params[0].size())
     m.eval()
-    print(m(x))
+    output = m(x)
+    print(output)
+    print(output.shape)
 
 if __name__ == "__main__":
     main()

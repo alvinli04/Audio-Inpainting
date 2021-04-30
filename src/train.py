@@ -31,25 +31,24 @@ def main():
     training_data = []
     for s in [i * 128 for i in range(length // 128) if i < length]:
 
-        context = mspec[ : , s : s + 96].copy()
+        context = mspec[: , s : s + 96].copy()
         context = np.pad(context, ((0,0), (0, 32)), 'constant')
         target = mspec[ : , s + 96 : s + 128]
 
         training_data.append((context, target))
 
-        sp.plot_mel_spectrogram(context, sample_rate)
-        sp.plot_mel_spectrogram(target, sample_rate)
+        # sp.plot_mel_spectrogram(context, sample_rate)
+        # sp.plot_mel_spectrogram(target, sample_rate)
 
+    for context, target in training_data:
+        x = torch.from_numpy(context[None, None, :, :])
+        m = model.Model()
 
-    # mspec = mspec[None, None, :, :128]
-    #
-    # x = torch.from_numpy(mspec)
-    # m = model.Model()
-    #
-    # m.eval()
-    # output = m(x)
-    # print(output)
-    # print(output.shape)
+        m.eval()
+        output = m(x)
+
+        print(output)
+        print(output.shape)
 
 if __name__ == "__main__":
     main()

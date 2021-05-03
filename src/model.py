@@ -134,9 +134,9 @@ class Decoder(nn.Module):
         self.K, self.S = K, S
 
         self.layer1 = nn.Sequential(
-            nn.ConvTranspose2d(1024, 512, kernel_size=K, stride=S, padding=1, output_padding=(0,1)),
+            nn.ConvTranspose2d(1024, 512, kernel_size=K, stride=S, padding=1, output_padding=(1,0)),
             nn.ReLU(),
-            nn.ConvTranspose2d(512, 256, kernel_size=K, stride=S, padding=1, output_padding=(0,1)),
+            nn.ConvTranspose2d(512, 256, kernel_size=K, stride=S, padding=1, output_padding=(1,0)),
             nn.ReLU()
         )
 
@@ -164,7 +164,7 @@ class Decoder(nn.Module):
             nn.ConvTranspose2d(16, 1, kernel_size=K, stride=S, padding=1, output_padding=1),
             nn.ReLU()
         )
-        
+
         self.bn4 = nn.BatchNorm2d(1)
 
 

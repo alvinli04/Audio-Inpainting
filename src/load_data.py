@@ -24,7 +24,7 @@ def load_training_data():
     waveform, sample_rate = librosa.load('../data/sample.wav', sr=None)
 
     mspec = sp.get_mel_spectrogram(waveform, sample_rate)
-    _ , length = mspec.shape
+    height, length = mspec.shape
 
     training_data = []
     for s in [i * 128 for i in range(length // 128) if i < length]:

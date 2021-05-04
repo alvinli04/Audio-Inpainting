@@ -25,8 +25,8 @@ import model
 
 #TODO: load the test and validation sets and put them in
 def train(cnn, optimizer, criterion, x_train, y_train, x_val, y_val, train_losses, val_losses):
-    x_train, y_train = Variable(x_train), Variable(y_train)
-    x_val, y_val = Variable(x_val), Variable(y_val)
+    x_train, y_train = Variable(x_train, requires_grad=True), Variable(y_train, requires_grad=True)
+    x_val, y_val = Variable(x_val, requires_grad=True), Variable(y_val, requires_grad=True)
 
     if torch.cuda.is_available():
         x_train = x_train.cuda()
@@ -34,38 +34,39 @@ def train(cnn, optimizer, criterion, x_train, y_train, x_val, y_val, train_losse
         x_val = x_val.cuda()
         y_val = y_val.cuda()
 
-    cnn.eval()
-    optimizer.zero_grad()
-
-    print(x_train.size(), y_train.size())
+    # print(x_train.size(), y_train.size())
 
     out_train = cnn(x_train)
-    out_val = cnn(x_val)
+    # out_val = cnn(x_val)
 
     loss_train = criterion(out_train, y_train)
-    loss_val = criterion(out_val, y_val)
+    # loss_val = criterion(out_val, y_val)
+
+    optimizer.zero_grad()
 
     loss_train.backward()
     optimizer.step()
 
-    train_losses.append(loss_train)
-    val_losses.append(loss_val)
+    train_losses.append(loss_train.item())
+    # val_losses.append(loss_val)
 
 def main():
     cnn = model.Model()
     criterion = nn.MSELoss()
     optimizer = optim.Adam(cnn.parameters(), lr=.01)
 
+
     if torch.cuda.is_available():
         cnn = cnn.cuda()
         criterion = criterion.cuda()
+    cnn.eval()
 
     train_losses, val_losses = [], []
 
-    epochs = 20
+    epochs = 100
     for epoch in range(epochs):
 
-        data = ld.load_training_data()
+        data, sample_rate = ld.load_training_data()
         half = len(data) // 2
         train_data = data[ : half]
         val_data = data[half : ]
@@ -86,7 +87,46 @@ def main():
 
             # print(x_train.size(), y_train.size())
 
-            train(cnn, optimizer, criterion, x_train, y_train, x_val, y_val, train_losses, val_losses)
+            # train(cnn, optimizer, criterion, x_train, y_train, x_val, y_val, train_losses, val_losses)
+            x_train, y_train = Variable(x_train, requires_grad=True), Variable(y_train, requires_grad=True)
+            x_val, y_val = Variable(x_val, requires_grad=True), Variable(y_val, requires_grad=True)
+
+            if torch.cuda.is_available():
+                x_train = x_train.cuda()
+                y_train = y_train.cuda()
+                x_val = x_val.cuda()
+                y_val = y_val.cuda()
+
+            # print(x_train.size(), y_train.size())
+
+            out_train = cnn(x_train)
+            # out_val = cnn(x_val)
+
+            loss_train = criterion(out_train, y_train)
+            # loss_val = criterion(out_val, y_val)
+
+            optimizer.zero_grad()
+
+            loss_train.backward()
+            optimizer.step()
+
+            train_losses.append(loss_train.item())
+            # val_losses.append(loss_val)
+
+        print(train_losses[-1])
+
+    sp.plot_mel_spectrogram(val_data[-1][0], sample_rate)
+    sp.plot_mel_spectrogram(val_data[-1][1], sample_rate)
+
+    t = val_data[-1][0][None, None, :, :]
+    t = torch.from_numpy(t)
+
+    test = cnn(t).detach().numpy()[0, 0]
+    sp.plot_mel_spectrogram(test, sample_rate)
+
+    plt.scatter(range(len(train_losses)), train_losses)
+    plt.show()
+
 
 
 if __name__ == '__main__':

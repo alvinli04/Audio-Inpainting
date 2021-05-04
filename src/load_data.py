@@ -38,4 +38,4 @@ def load_training_data():
         # sp.plot_mel_spectrogram(context, sample_rate)
         # sp.plot_mel_spectrogram(target, sample_rate)
 
-    return training_data
+    return (training_data, sample_rate)

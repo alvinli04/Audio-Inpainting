@@ -41,11 +41,11 @@ class Model(nn.Module):
     def forward(self, x):
         out = self.encoder.forward(x)
 
-        print ("encoder shape:", out.shape)
+        # print ("encoder shape:", out.shape)
 
         out = self.decoder.forward(out)
 
-        print ("decoder shape:", out.shape)
+        # print ("decoder shape:", out.shape)
 
         #remove normalization if needed
         out = self.normalize(out)
@@ -170,7 +170,6 @@ class Decoder(nn.Module):
 
     def forward(self, x):
         out = self.layer1(x)
-        print ("layer1 shape:", out.shape)
         out = self.bn1(out)
         out = self.layer2(out)
         out = self.bn2(out)

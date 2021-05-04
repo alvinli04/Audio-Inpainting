@@ -41,11 +41,11 @@ class Model(nn.Module):
     def forward(self, x):
         out = self.encoder.forward(x)
 
-        print ("encoder shape:", out.shape)
+        # print ("encoder shape:", out.shape)
 
         out = self.decoder.forward(out)
 
-        print ("decoder shape:", out.shape)
+        # print ("decoder shape:", out.shape)
 
         #remove normalization if needed
         out = self.normalize(out)
@@ -134,9 +134,9 @@ class Decoder(nn.Module):
         self.K, self.S = K, S
 
         self.layer1 = nn.Sequential(
-            nn.ConvTranspose2d(1024, 512, kernel_size=K, stride=S, padding=1, output_padding=(0,1)),
+            nn.ConvTranspose2d(1024, 512, kernel_size=K, stride=S, padding=1, output_padding=(1,0)),
             nn.ReLU(),
-            nn.ConvTranspose2d(512, 256, kernel_size=K, stride=S, padding=1, output_padding=(0,1)),
+            nn.ConvTranspose2d(512, 256, kernel_size=K, stride=S, padding=1, output_padding=(1,0)),
             nn.ReLU()
         )
 
@@ -164,13 +164,12 @@ class Decoder(nn.Module):
             nn.ConvTranspose2d(16, 1, kernel_size=K, stride=S, padding=1, output_padding=1),
             nn.ReLU()
         )
-        
+
         self.bn4 = nn.BatchNorm2d(1)
 
 
     def forward(self, x):
         out = self.layer1(x)
-        print ("layer1 shape:", out.shape)
         out = self.bn1(out)
         out = self.layer2(out)
         out = self.bn2(out)

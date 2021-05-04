@@ -16,6 +16,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+import soundfile as sf
+
 def plot_waveform(samples, sample_rate):
     librosa.display.waveplot(samples, sr=sample_rate)
     plt.show()
@@ -32,8 +34,13 @@ def plot_mel_spectrogram(mel_sgram, sample_rate):
     plt.colorbar(format='%+2.0f dB')
     plt.show()
 
+def get_waveform(mel_sgram, sample_rate):
+    return librosa.feature.inverse.mel_to_audio(M=mel_sgram, sr=sample_rate)
+
 if __name__ == '__main__':
     waveform, sample_rate = librosa.load('../data/sample.wav', sr=None)
     mspec = get_mel_spectrogram(waveform, sample_rate)
-    plot_mel_spectrogram(mspec, sample_rate)
-    print(mspec)
+    wv = get_waveform(mspec, sample_rate)
+    plot_waveform(waveform, sample_rate)
+    plot_waveform(wv, sample_rate)
+    sf.write('../data/sample_out.wav', wv, sample_rate, subtype='PCM_24')

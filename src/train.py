@@ -23,32 +23,6 @@ import spectrogram as sp
 import load_data as ld
 import model
 
-#TODO: load the test and validation sets and put them in
-def train(cnn, optimizer, criterion, x_train, y_train, x_val, y_val, train_losses, val_losses):
-    x_train, y_train = Variable(x_train, requires_grad=True), Variable(y_train, requires_grad=True)
-    x_val, y_val = Variable(x_val, requires_grad=True), Variable(y_val, requires_grad=True)
-
-    if torch.cuda.is_available():
-        x_train = x_train.cuda()
-        y_train = y_train.cuda()
-        x_val = x_val.cuda()
-        y_val = y_val.cuda()
-
-    # print(x_train.size(), y_train.size())
-
-    out_train = cnn(x_train)
-    # out_val = cnn(x_val)
-
-    loss_train = criterion(out_train, y_train)
-    # loss_val = criterion(out_val, y_val)
-
-    optimizer.zero_grad()
-
-    loss_train.backward()
-    optimizer.step()
-
-    train_losses.append(loss_train.item())
-    # val_losses.append(loss_val)
 
 def main():
     cnn = model.Model()
@@ -73,6 +47,7 @@ def main():
 
         for i in range(half):
 
+            #training begins here
             x_train = train_data[i][0][None, None, :, :]
             y_train = train_data[i][1][None, None, :, :]
 
@@ -112,6 +87,8 @@ def main():
 
             train_losses.append(loss_train.item())
             # val_losses.append(loss_val)
+
+            #training ends
 
         print(train_losses[-1])
 

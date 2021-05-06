@@ -26,8 +26,9 @@ def get_mel_spectrogram(samples, sample_rate):
     sgram = librosa.stft(samples)
     sgram_mag, _ = librosa.magphase(sgram)
     mel_scale_sgram = librosa.feature.melspectrogram(S=sgram_mag, sr=sample_rate)
-    mel_sgram = librosa.amplitude_to_db(mel_scale_sgram, ref=np.min)
-    return mel_sgram
+    #mel_sgram = librosa.amplitude_to_db(mel_scale_sgram, ref=np.min)
+    #return mel_sgram
+    return mel_scale_sgram
 
 def plot_mel_spectrogram(mel_sgram, sample_rate):
     librosa.display.specshow(mel_sgram, sr=sample_rate, x_axis='time', y_axis='mel')
@@ -35,12 +36,12 @@ def plot_mel_spectrogram(mel_sgram, sample_rate):
     plt.show()
 
 def get_waveform(mel_sgram, sample_rate):
+    #mel_sgram = librosa.db_to_amplitude(S_db=mel_sgram)
     return librosa.feature.inverse.mel_to_audio(M=mel_sgram, sr=sample_rate)
 
 if __name__ == '__main__':
-    waveform, sample_rate = librosa.load('../data/sample.wav', sr=None)
-    mspec = get_mel_spectrogram(waveform, sample_rate)
-    wv = get_waveform(mspec, sample_rate)
+    waveform, sample_rate = librosa.load('../data/sample.wav')
+    wv = get_waveform(get_mel_spectrogram(waveform, sample_rate), sample_rate)
     plot_waveform(waveform, sample_rate)
     plot_waveform(wv, sample_rate)
     sf.write('../data/sample_out.wav', wv, sample_rate, subtype='PCM_24')

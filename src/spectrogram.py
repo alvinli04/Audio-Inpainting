@@ -6,8 +6,6 @@ import torchaudio.transforms as T
 import io
 import os
 import math
-import tarfile
-import multiprocessing
 
 import scipy
 import librosa
@@ -28,7 +26,6 @@ def get_mel_spectrogram(samples, sample_rate):
     mel_scale_sgram = librosa.feature.melspectrogram(S=sgram_mag, sr=sample_rate)
     mel_sgram = librosa.amplitude_to_db(mel_scale_sgram, ref=np.min)
     return mel_sgram
-    #return mel_scale_sgram
 
 def plot_mel_spectrogram(mel_sgram, sample_rate):
     librosa.display.specshow(mel_sgram, sr=sample_rate, x_axis='time', y_axis='mel')
@@ -36,14 +33,13 @@ def plot_mel_spectrogram(mel_sgram, sample_rate):
     plt.show()
 
 def get_waveform(mel_sgram, sample_rate):
-    mel_sgram = librosa.db_to_amplitude(S_db=mel_sgram, ref=np.min)
+    mel_sgram = librosa.db_to_amplitude(S_db=mel_sgram, ref=.1e-12)
     return librosa.feature.inverse.mel_to_audio(M=mel_sgram, sr=sample_rate)
 
 if __name__ == '__main__':
     waveform, sample_rate = librosa.load('../data/sample.wav')
-    msg = get_mel_spectrogram(waveform, sample_rate)
-    #wv = get_waveform(msg, sample_rate)
-    #plot_waveform(waveform, sample_rate)
-    #plot_waveform(wv, sample_rate)
-    plot_mel_spectrogram(msg, sample_rate)
-    #sf.write('../data/sample_out.wav', wv, sample_rate, subtype='PCM_24')
+    sg = get_mel_spectrogram(waveform, sample_rate)
+    wv = get_waveform(sg, sample_rate)
+    plot_waveform(waveform, sample_rate)
+    plot_waveform(wv, sample_rate)
+    sf.write('../data/sample_out.wav', wv, sample_rate, subtype='PCM_24')

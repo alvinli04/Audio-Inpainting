@@ -33,7 +33,7 @@ def main():
     if torch.cuda.is_available():
         cnn = cnn.cuda()
         criterion = criterion.cuda()
-    cnn.eval()
+    cnn.train()
 
     train_losses, val_losses = [], []
 

@@ -34,13 +34,14 @@ def main():
         cnn = cnn.cuda()
         criterion = criterion.cuda()
     cnn.train()
+    cnn.eval()
 
     train_losses, val_losses = [], []
+    data, sample_rate = ld.load_training_data('../data/')
 
-    epochs = 100
+    epochs = 10
     for epoch in range(epochs):
 
-        data, sample_rate = ld.load_training_data()
         half = len(data) // 2
         train_data = data[ : half]
         val_data = data[half : ]

@@ -7,6 +7,7 @@ from torch import nn
 import io
 import os
 import math
+import glob
 import tarfile
 import multiprocessing
 
@@ -20,8 +21,8 @@ import numpy as np
 import spectrogram as sp
 import model
 
-def load_training_data():
-    waveform, sample_rate = librosa.load('../data/sample.wav', sr=None)
+def load_data_file(path):
+    waveform, sample_rate = librosa.load(path, sr=None)
 
     mspec = sp.get_mel_spectrogram(waveform, sample_rate)
     height, length = mspec.shape
@@ -39,3 +40,25 @@ def load_training_data():
         # sp.plot_mel_spectrogram(target, sample_rate)
 
     return (training_data, sample_rate)
+
+def load_training_data(directory):
+    files = glob.glob(directory + '**/*.flac', recursive = True)
+
+    training_data = []
+    _ , sample_rate = load_data_file(files[0])
+    for file in files:
+        data, sr = load_data_file(file)
+        print(len(data))
+
+        training_data += data
+
+    return (training_data, sample_rate)
+
+def main():
+    data, sr = load_training_data('../data/')
+    print(len(data))
+
+    sp.plot_mel_spectrogram(data[0][0], sr)
+
+if __name__ == '__main__':
+    main()

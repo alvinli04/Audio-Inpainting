@@ -21,7 +21,7 @@ import spectrogram as sp
 import model
 
 def load_training_data():
-    waveform, sample_rate = librosa.load('../data/sample.wav', sr=None)
+    waveform, sample_rate = librosa.load('../data/sounds/sample.wav', sr=None)
 
     mspec = sp.get_mel_spectrogram(waveform, sample_rate)
     height, length = mspec.shape

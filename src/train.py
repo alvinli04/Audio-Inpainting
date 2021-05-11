@@ -29,7 +29,7 @@ epochs = 5
 def main():
     cnn = model.Model()
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(cnn.parameters(), lr=.01)
+    optimizer = optim.Adam(cnn.parameters(), lr=.001)
 
     if os.path.exists(PATH):
         checkpoint = torch.load(PATH)

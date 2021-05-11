@@ -4,6 +4,7 @@ import torchaudio.functional as F
 import torchaudio.transforms as T
 from torch import nn
 from torch.autograd import Variable
+from torch.utils.data import DataLoader
 import torch.optim as optim
 
 import io
@@ -33,78 +34,85 @@ def main():
     if torch.cuda.is_available():
         cnn = cnn.cuda()
         criterion = criterion.cuda()
-    cnn.train()
-    cnn.eval()
+
+
 
     train_losses, val_losses = [], []
-    data, sample_rate = ld.load_training_data('../data/')
+    train_data = ld.AudioInpaintingDataset('../data/npy_data/', start = 10, end = 20)
+    val_data = ld.AudioInpaintingDataset('../data/npy_data/', end = 10)
+    sample_rate = train_data.get_sample_rate()
 
     epochs = 10
+    train_loader = DataLoader(train_data)
+    val_loader = DataLoader(val_data)
+    print("Starting training")
     for epoch in range(epochs):
 
-        half = len(data) // 2
-        train_data = data[ : half]
-        val_data = data[half : ]
+        cnn.eval()
+        for contexts, targets in train_loader:
 
-        for i in range(half):
+            for context, target in zip(contexts, targets):
 
-            #training begins here
-            x_train = train_data[i][0][None, None, :, :]
-            y_train = train_data[i][1][None, None, :, :]
+                #training begins here
+                x_train = context
+                y_train = target
 
-            x_val = val_data[i][0][None, None, :, :]
-            y_val = val_data[i][1][None, None, :, :]
+                x_train = Variable(x_train, requires_grad=True)
+                y_train = Variable(y_train, requires_grad=True)
 
-            x_train = torch.from_numpy(x_train)
-            y_train = torch.from_numpy(y_train)
+                if torch.cuda.is_available():
+                    x_train = x_train.cuda()
+                    y_train = y_train.cuda()
 
-            x_val = torch.from_numpy(x_val)
-            y_val = torch.from_numpy(y_val)
+                out_train = cnn(x_train)
+                loss_train = criterion(out_train, y_train)
 
-            # print(x_train.size(), y_train.size())
+                optimizer.zero_grad()
+                loss_train.backward()
+                optimizer.step()
+                train_losses.append(loss_train.item())
 
-            # train(cnn, optimizer, criterion, x_train, y_train, x_val, y_val, train_losses, val_losses)
-            x_train, y_train = Variable(x_train, requires_grad=True), Variable(y_train, requires_grad=True)
-            x_val, y_val = Variable(x_val, requires_grad=True), Variable(y_val, requires_grad=True)
+        cnn.eval()
+        loss = 0
+        counter = 0
+        for contexts, targets in val_loader:
 
-            if torch.cuda.is_available():
-                x_train = x_train.cuda()
-                y_train = y_train.cuda()
-                x_val = x_val.cuda()
-                y_val = y_val.cuda()
+            for context, target in zip(contexts, targets):
 
-            # print(x_train.size(), y_train.size())
+                x_val = context
+                y_val = target
 
-            out_train = cnn(x_train)
-            # out_val = cnn(x_val)
+                x_val = Variable(x_val, requires_grad=True)
+                y_val= Variable(y_val, requires_grad=True)
 
-            loss_train = criterion(out_train, y_train)
-            # loss_val = criterion(out_val, y_val)
+                if torch.cuda.is_available():
+                    x_val = x_val.cuda()
+                    y_val = y_val.cuda()
 
-            optimizer.zero_grad()
+                out_val = cnn(x_val)
+                loss_val = criterion(out_val, y_val)
 
-            loss_train.backward()
-            optimizer.step()
+                optimizer.zero_grad()
+                loss_val.backward()
+                optimizer.step()
 
-            train_losses.append(loss_train.item())
-            # val_losses.append(loss_val)
+                loss += loss_val.item()
+                counter += 1
 
-            #training ends
+        print(loss/counter)
 
-        print(train_losses[-1])
 
-    sp.plot_mel_spectrogram(val_data[-1][0], sample_rate)
-    sp.plot_mel_spectrogram(val_data[-1][1], sample_rate)
+    test_context, test_target = val_data[-1]
 
-    t = val_data[-1][0][None, None, :, :]
-    t = torch.from_numpy(t)
+    sp.plot_mel_spectrogram(np.squeeze(test_context.numpy()), sample_rate)
+    sp.plot_mel_spectrogram(np.squeeze(test_target.numpy()), sample_rate)
 
-    test = cnn(t).detach().numpy()[0, 0]
-    sp.plot_mel_spectrogram(test, sample_rate)
+
+    test_output = cnn(test_context).detach()
+    sp.plot_mel_spectrogram(np.squeeze(test_output.numpy()), sample_rate)
 
     plt.scatter(range(len(train_losses)), train_losses)
     plt.show()
-
 
 
 if __name__ == '__main__':

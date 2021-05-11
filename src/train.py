@@ -23,21 +23,28 @@ import spectrogram as sp
 import load_data as ld
 import model
 
+PATH = '../data/models/checkpoint.tar'
+epochs = 5
 
 def main():
     cnn = model.Model()
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(cnn.parameters(), lr=.01)
+    optimizer = optim.Adam(cnn.parameters(), lr=.001)
 
+    if os.path.exists(PATH):
+        checkpoint = torch.load(PATH)
+        cnn.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     if torch.cuda.is_available():
         cnn = cnn.cuda()
         criterion = criterion.cuda()
-    cnn.train()
+
+    # change to train
+    cnn.eval()
 
     train_losses, val_losses = [], []
 
-    epochs = 100
     for epoch in range(epochs):
 
         data, sample_rate = ld.load_training_data()
@@ -91,6 +98,11 @@ def main():
             #training ends
 
         print(train_losses[-1])
+
+    torch.save({
+            'model_state_dict': cnn.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            }, PATH)
 
     sp.plot_mel_spectrogram(val_data[-1][0], sample_rate)
     sp.plot_mel_spectrogram(val_data[-1][1], sample_rate)

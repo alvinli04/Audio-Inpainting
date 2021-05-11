@@ -38,7 +38,7 @@ def get_waveform(mel_sgram, sample_rate):
     return librosa.feature.inverse.mel_to_audio(M=mel_sgram, sr=sample_rate, n_fft=512, hop_length=128)
 
 if __name__ == '__main__':
-    waveform, sample_rate = librosa.load('../data/sample.wav')
+    waveform, sample_rate = librosa.load('../data/sounds/sample.wav')
     sg = get_mel_spectrogram(waveform, sample_rate)
     wv = get_waveform(sg, sample_rate)
     plot_mel_spectrogram(sg, sample_rate)

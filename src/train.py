@@ -4,6 +4,7 @@ import torchaudio.functional as F
 import torchaudio.transforms as T
 from torch import nn
 from torch.autograd import Variable
+from torch.utils.data import DataLoader
 import torch.optim as optim
 
 import io
@@ -24,7 +25,6 @@ import load_data as ld
 import model
 
 PATH = '../data/models/checkpoint.tar'
-epochs = 5
 
 def main():
     cnn = model.Model()
@@ -32,6 +32,7 @@ def main():
     optimizer = optim.Adam(cnn.parameters(), lr=.001)
 
     if os.path.exists(PATH):
+        print("Found checkpoint")
         checkpoint = torch.load(PATH)
         cnn.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -40,82 +41,81 @@ def main():
         cnn = cnn.cuda()
         criterion = criterion.cuda()
 
-    # change to train
-    cnn.eval()
 
-    train_losses, val_losses = [], []
+    val_losses = []
+    train_data = ld.AudioInpaintingDataset('../data/npy_data/', start = 10)
+    val_data = ld.AudioInpaintingDataset('../data/npy_data/', end = 10)
+    sample_rate = train_data.get_sample_rate()
 
+    epochs = 10
+    train_loader = DataLoader(train_data, batch_size = 8, drop_last = True)
+    val_loader = DataLoader(val_data, batch_size = 1, drop_last = True)
+    print("Starting training")
     for epoch in range(epochs):
 
-        data, sample_rate = ld.load_training_data()
-        half = len(data) // 2
-        train_data = data[ : half]
-        val_data = data[half : ]
-
-        for i in range(half):
+        cnn.train()
+        for context, target in train_loader:
 
             #training begins here
-            x_train = train_data[i][0][None, None, :, :]
-            y_train = train_data[i][1][None, None, :, :]
+            x_train = context
+            y_train = target
 
-            x_val = val_data[i][0][None, None, :, :]
-            y_val = val_data[i][1][None, None, :, :]
-
-            x_train = torch.from_numpy(x_train)
-            y_train = torch.from_numpy(y_train)
-
-            x_val = torch.from_numpy(x_val)
-            y_val = torch.from_numpy(y_val)
-
-            # print(x_train.size(), y_train.size())
-
-            # train(cnn, optimizer, criterion, x_train, y_train, x_val, y_val, train_losses, val_losses)
-            x_train, y_train = Variable(x_train, requires_grad=True), Variable(y_train, requires_grad=True)
-            x_val, y_val = Variable(x_val, requires_grad=True), Variable(y_val, requires_grad=True)
+            x_train = Variable(x_train, requires_grad=True)
+            y_train = Variable(y_train, requires_grad=True)
 
             if torch.cuda.is_available():
                 x_train = x_train.cuda()
                 y_train = y_train.cuda()
-                x_val = x_val.cuda()
-                y_val = y_val.cuda()
-
-            # print(x_train.size(), y_train.size())
 
             out_train = cnn(x_train)
-            # out_val = cnn(x_val)
-
             loss_train = criterion(out_train, y_train)
-            # loss_val = criterion(out_val, y_val)
 
             optimizer.zero_grad()
-
             loss_train.backward()
             optimizer.step()
 
-            train_losses.append(loss_train.item())
-            # val_losses.append(loss_val)
+        loss = 0
+        counter = 0
+        cnn.eval()
+        for context, target in val_loader:
 
-            #training ends
+            x_val = context
+            y_val = target
 
-        print(train_losses[-1])
+            x_val = Variable(x_val, requires_grad=True)
+            y_val= Variable(y_val, requires_grad=True)
+
+            if torch.cuda.is_available():
+                x_val = x_val.cuda()
+                y_val = y_val.cuda()
+
+            out_val = cnn(x_val)
+            loss_val = criterion(out_val, y_val)
+            loss += loss_val.item()
+            counter += 1
+
+        print(loss/counter)
 
     torch.save({
             'model_state_dict': cnn.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             }, PATH)
 
-    sp.plot_mel_spectrogram(val_data[-1][0], sample_rate)
-    sp.plot_mel_spectrogram(val_data[-1][1], sample_rate)
 
-    t = val_data[-1][0][None, None, :, :]
-    t = torch.from_numpy(t)
 
-    test = cnn(t).detach().numpy()[0, 0]
-    sp.plot_mel_spectrogram(test, sample_rate)
+    test_context, test_target = val_data[-1]
+    test_context = test_context[None, :, :]
+    test_target = test_target[None, :, :]
+
+    sp.plot_mel_spectrogram(np.squeeze(test_context.numpy()), sample_rate)
+    sp.plot_mel_spectrogram(np.squeeze(test_target.numpy()), sample_rate)
+
+
+    test_output = cnn(test_context).detach()
+    sp.plot_mel_spectrogram(np.squeeze(test_output.numpy()), sample_rate)
 
     plt.scatter(range(len(train_losses)), train_losses)
     plt.show()
-
 
 
 if __name__ == '__main__':

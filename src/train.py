@@ -30,79 +30,71 @@ def main():
     criterion = nn.MSELoss()
     optimizer = optim.Adam(cnn.parameters(), lr=.01)
 
-
     if torch.cuda.is_available():
         cnn = cnn.cuda()
         criterion = criterion.cuda()
 
 
 
-    train_losses, val_losses = [], []
-    train_data = ld.AudioInpaintingDataset('../data/npy_data/', start = 10, end = 20)
+    val_losses = []
+    train_data = ld.AudioInpaintingDataset('../data/npy_data/', start = 10)
     val_data = ld.AudioInpaintingDataset('../data/npy_data/', end = 10)
     sample_rate = train_data.get_sample_rate()
 
     epochs = 10
-    train_loader = DataLoader(train_data)
-    val_loader = DataLoader(val_data)
+    train_loader = DataLoader(train_data, batch_size = 8, drop_last = True)
+    val_loader = DataLoader(val_data, batch_size = 1, drop_last = True)
     print("Starting training")
     for epoch in range(epochs):
 
-        cnn.eval()
-        for contexts, targets in train_loader:
+        cnn.train()
+        for context, target in train_loader:
 
-            for context, target in zip(contexts, targets):
+            #training begins here
+            x_train = context
+            y_train = target
 
-                #training begins here
-                x_train = context
-                y_train = target
+            x_train = Variable(x_train, requires_grad=True)
+            y_train = Variable(y_train, requires_grad=True)
 
-                x_train = Variable(x_train, requires_grad=True)
-                y_train = Variable(y_train, requires_grad=True)
+            if torch.cuda.is_available():
+                x_train = x_train.cuda()
+                y_train = y_train.cuda()
 
-                if torch.cuda.is_available():
-                    x_train = x_train.cuda()
-                    y_train = y_train.cuda()
+            out_train = cnn(x_train)
+            loss_train = criterion(out_train, y_train)
 
-                out_train = cnn(x_train)
-                loss_train = criterion(out_train, y_train)
+            optimizer.zero_grad()
+            loss_train.backward()
+            optimizer.step()
 
-                optimizer.zero_grad()
-                loss_train.backward()
-                optimizer.step()
-                train_losses.append(loss_train.item())
-
-        cnn.eval()
         loss = 0
         counter = 0
-        for contexts, targets in val_loader:
+        cnn.eval()
+        for context, target in val_loader:
 
-            for context, target in zip(contexts, targets):
+            x_val = context
+            y_val = target
 
-                x_val = context
-                y_val = target
+            x_val = Variable(x_val, requires_grad=True)
+            y_val= Variable(y_val, requires_grad=True)
 
-                x_val = Variable(x_val, requires_grad=True)
-                y_val= Variable(y_val, requires_grad=True)
+            if torch.cuda.is_available():
+                x_val = x_val.cuda()
+                y_val = y_val.cuda()
 
-                if torch.cuda.is_available():
-                    x_val = x_val.cuda()
-                    y_val = y_val.cuda()
+            out_val = cnn(x_val)
+            loss_val = criterion(out_val, y_val)
 
-                out_val = cnn(x_val)
-                loss_val = criterion(out_val, y_val)
-
-                optimizer.zero_grad()
-                loss_val.backward()
-                optimizer.step()
-
-                loss += loss_val.item()
-                counter += 1
+            loss += loss_val.item()
+            counter += 1
 
         print(loss/counter)
 
 
     test_context, test_target = val_data[-1]
+    test_context = test_context[None, :, :]
+    test_target = test_target[None, :, :]
 
     sp.plot_mel_spectrogram(np.squeeze(test_context.numpy()), sample_rate)
     sp.plot_mel_spectrogram(np.squeeze(test_target.numpy()), sample_rate)

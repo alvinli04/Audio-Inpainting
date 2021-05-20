@@ -38,8 +38,8 @@ class AudioInpaintingDataset(Dataset):
         return len(self.context_files)
 
     def __getitem__(self, idx):
-        context = torch.from_numpy(np.load(self.context_files[idx])[None, None, :, :])
-        target = torch.from_numpy(np.load(self.target_files[idx])[None, None, :, :])
+        context = torch.from_numpy(np.load(self.context_files[idx])[None, :, :])
+        target = torch.from_numpy(np.load(self.target_files[idx])[None, :, :])
 
         return (context, target)
 
@@ -105,13 +105,13 @@ def save_training_data(src_dir, dst_dir):
 def main():
     save_training_data('../data/LibriSpeech/dev-clean/84/', '../data/npy_data/')
 
-    set = AudioInpaintingDataset('../data/npy_data/',end = 3)
-    loader = DataLoader(set, batch_size = 2)
+    set = AudioInpaintingDataset('../data/npy_data/',end = 10)
+    loader = DataLoader(set, batch_size = 5)
 
     for i in range(10):
         for sample in loader:
-            print(sample['context'].size())
-            print(sample['target'].size())
+            print(sample[0].size())
+            print(sample[1].size())
 
     print(set.get_sample_rate())
 

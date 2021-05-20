@@ -24,16 +24,22 @@ import spectrogram as sp
 import load_data as ld
 import model
 
+PATH = '../data/models/checkpoint.tar'
 
 def main():
     cnn = model.Model()
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(cnn.parameters(), lr=.01)
+    optimizer = optim.Adam(cnn.parameters(), lr=.001)
+
+    if os.path.exists(PATH):
+        print("Found checkpoint")
+        checkpoint = torch.load(PATH)
+        cnn.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     if torch.cuda.is_available():
         cnn = cnn.cuda()
         criterion = criterion.cuda()
-
 
 
     val_losses = []
@@ -85,11 +91,16 @@ def main():
 
             out_val = cnn(x_val)
             loss_val = criterion(out_val, y_val)
-
             loss += loss_val.item()
             counter += 1
 
         print(loss/counter)
+
+    torch.save({
+            'model_state_dict': cnn.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            }, PATH)
+
 
 
     test_context, test_target = val_data[-1]

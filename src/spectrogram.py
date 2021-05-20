@@ -7,7 +7,8 @@ import io
 import os
 import math
 
-import scipy
+import scipy.signal as ss
+from logmmse import logmmse
 import librosa
 import librosa.display
 import matplotlib
@@ -21,7 +22,7 @@ def plot_waveform(samples, sample_rate):
     plt.show()
 
 def get_mel_spectrogram(samples, sample_rate):
-    sgram = librosa.stft(samples, n_fft=512)
+    sgram = librosa.stft(samples, n_fft=1024)
     #mess around with nfft, hopsize (match with mel_to_audio), increase mel bins
     sgram_mag, _ = librosa.magphase(sgram)
     mel_scale_sgram = librosa.feature.melspectrogram(S=sgram_mag, sr=sample_rate)
@@ -34,14 +35,18 @@ def plot_mel_spectrogram(mel_sgram, sample_rate):
     plt.show()
 
 def get_waveform(mel_sgram, sample_rate):
-    mel_sgram = librosa.db_to_amplitude(S_db=mel_sgram, ref=.000001)
-    return librosa.feature.inverse.mel_to_audio(M=mel_sgram, sr=sample_rate, n_fft=512, hop_length=128)
+    mel_sgram = librosa.db_to_amplitude(S_db=mel_sgram, ref=5.33e-6)
+    wf = librosa.feature.inverse.mel_to_audio(M=mel_sgram, sr=sample_rate, n_fft=1024, hop_length=256)
+
+    wf = ss.savgol_filter(wf, 5, 2)
+    wf = logmmse(wf, sample_rate)
+    return wf
 
 if __name__ == '__main__':
     waveform, sample_rate = librosa.load('../data/sounds/sample.wav')
     sg = get_mel_spectrogram(waveform, sample_rate)
     wv = get_waveform(sg, sample_rate)
-    plot_mel_spectrogram(sg, sample_rate)
-    plot_waveform(waveform, sample_rate)
+    #plot_mel_spectrogram(sg, sample_rate)
+    #plot_waveform(waveform, sample_rate)
     plot_waveform(wv, sample_rate)
-    sf.write('../data/sample_out.wav', wv, sample_rate, subtype='PCM_24')
+    sf.write('../data/sounds/sample_out.wav', wv, sample_rate, subtype='PCM_24')
